@@ -26,6 +26,9 @@ class Value:
         
         return out
 
+    def __radd__(self, other):
+        return self * other
+
     def __mul__(self, other):
         other = other if isinstance(other, Value) else Value(other)
         out = Value(self.data * other.data, (self, other), '*')
@@ -37,6 +40,9 @@ class Value:
         
         return out
     
+    def __rmul__(self, other):
+        return self * other
+
     def exp(self, multiplier):
         return math.exp(multiplier * self.data)
 
