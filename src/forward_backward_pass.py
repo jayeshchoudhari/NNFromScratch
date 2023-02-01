@@ -27,7 +27,16 @@ class Value:
         return out
 
     def __radd__(self, other):
-        return self * other
+        return self + other
+
+    def __neg__(self):
+        return self * -1
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def __rsub__(self, other): # other - self
+        return other + (-self)
 
     def __mul__(self, other):
         other = other if isinstance(other, Value) else Value(other)
@@ -43,12 +52,37 @@ class Value:
     def __rmul__(self, other):
         return self * other
 
-    def exp(self, multiplier):
-        return math.exp(multiplier * self.data)
+    def __pow__(self, other):
+        assert isinstance(other, (int, float)), "Only supporting division with integer and float"
+        x = self.data
+        out = Value(x**other, (self, ), f"**{other}")
+
+        def _local_backward():
+            self.grad += (other*(self.data**(other-1)) * out.grad)
+            
+        out._backward = _local_backward 
+        return out
+
+    def __truediv__(self, other):
+        return self * other**-1
+
+    def __rtruediv__(self, other): # other / self
+        return other * self**-1
+
+    def exp(self):
+        x = self.data
+        out = Value(math.exp(x), (self, ), 'exp')
+
+        def _local_backward():
+            self.grad += out.data * out.grad
+            
+        out._backward = _local_backward
+
+        return out
 
     def tanh(self):
         x = self.data
-        t = (self.exp(2)  - 1)/(self.exp(2)  + 1)
+        t = (math.exp(2 * x)  - 1)/(math.exp(2 * x)  + 1)
         out = Value(t, (self, ), 'tanh')
         
         def _local_backward():
